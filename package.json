@@ -1,6 +1,6 @@
 {
 "name": "com.chepurnovdo.buildhelperplugin",
-"version": "1.0.0",
+"version": "1.0.1",
 "displayName": "Build Helper Plugin",
 "description": "A Unity plugin to simplify Android builds for GooglePlay, AppGallery, and RuStore with ScriptableObject configs.",
 "unity": "2022.3",
