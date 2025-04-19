@@ -2,7 +2,6 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
-using Unity.VisualScripting.FullSerializer;
 
 public class AndroidBuildWindow : EditorWindow
 {
@@ -10,7 +9,7 @@ public class AndroidBuildWindow : EditorWindow
     private string[] _configPaths;
     private int _selectedConfigIndex;
 
-    [MenuItem("Tools/Build Helper Plugin")]
+    [MenuItem("Build Helper Plugin/Open Build Window")]
     public static void ShowWindow() => GetWindow<AndroidBuildWindow>("Build Helper Plugin");
 
     private void OnEnable() => LoadConfigs();
@@ -39,18 +38,18 @@ public class AndroidBuildWindow : EditorWindow
             return;
 
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Build Settings", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Store Type", _config.StoreType.ToString());
-        EditorGUILayout.LabelField("Package Type", _config.PackageType.ToString());
-        EditorGUILayout.LabelField("Package Name", _config.PackageName);
+        EditorGUILayout.LabelField("Build Settings:", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Store Type:", _config.StoreType.ToString());
+        EditorGUILayout.LabelField("Package Type:", _config.PackageType.ToString());
+        EditorGUILayout.LabelField("Package Name:", _config.PackageName);
 
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Version", _config.Version);
-        EditorGUILayout.LabelField("Bundle Version Code", _config.BundleVersionCode.ToString());
-        EditorGUILayout.LabelField("Split Application Binary", _config.SplitApplicationBinary.ToString());
+        EditorGUILayout.LabelField("Version:", _config.Version);
+        EditorGUILayout.LabelField("Bundle Version Code:", _config.BundleVersionCode.ToString());
+        EditorGUILayout.LabelField("Split Application Binary:", _config.SplitApplicationBinary.ToString());
 
 
-        EditorGUILayout.LabelField("Output Folder", _config.OutputFolder);
+        EditorGUILayout.LabelField("Output Folder:", _config.OutputFolder);
 
         EditorGUILayout.Space();
         if (GUILayout.Button("Build"))
@@ -69,22 +68,28 @@ public class AndroidBuildWindow : EditorWindow
 
         BuildOptions options = BuildOptions.None;
         string extension = _config.PackageType == PackageType.APK ? "apk" : "aab";
-        string outputPath = Path.Combine(_config.OutputFolder, $"{_config.PackageName}_{_config.BundleVersionCode}({_config.Version}).{extension}");
+        string fileName = $"{_config.PackageName}_{_config.BundleVersionCode}({_config.Version}).{extension}";
+        string outputPath = Path.Combine(_config.OutputFolder, fileName);
 
         if (!Directory.Exists(_config.OutputFolder))
             Directory.CreateDirectory(_config.OutputFolder);
 
-        EditorUserBuildSettings.buildAppBundle = _config.PackageType == PackageType.AAB;
-
-        switch (_config.StoreType)
+        if (File.Exists(outputPath))
         {
-            case StoreType.GooglePlay:
-                break;
-            case StoreType.AppGallery:
-                break;
-            case StoreType.RuStore:
-                break;
+            bool overwrite = EditorUtility.DisplayDialog(
+                "File Already Exists",
+                $"The file {outputPath} already exists. Do you want to overwrite it?",
+                "Yes", "No"
+            );
+
+            if (!overwrite)
+            {
+                Debug.Log("Build cancelled: User chose not to overwrite existing file.");
+                return;
+            }
         }
+
+        EditorUserBuildSettings.buildAppBundle = _config.PackageType == PackageType.AAB;
 
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
         {
@@ -94,7 +99,24 @@ public class AndroidBuildWindow : EditorWindow
             options = options
         };
 
-        BuildPipeline.BuildPlayer(buildPlayerOptions);
-        Debug.Log($"Build completed: {outputPath}");
+        var buildReport = BuildPipeline.BuildPlayer(buildPlayerOptions);
+        if (buildReport.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
+        {
+            Debug.Log($"Build completed: {outputPath}");
+            
+            try
+            {
+                string folderPath = Path.GetFullPath(_config.OutputFolder);
+                System.Diagnostics.Process.Start(folderPath);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Failed to open folder {_config.OutputFolder}: {e.Message}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"Build failed: {buildReport.summary.result}");
+        }
     }
 }
