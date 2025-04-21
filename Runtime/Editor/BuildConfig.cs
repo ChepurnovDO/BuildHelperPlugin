@@ -21,11 +21,7 @@ public class BuildConfig : ScriptableObject
 
     private string DefaultOutputFolder() => $"Builds/{StoreType}/";
 
-    private void OnValidate()
-    {
-        //if (string.IsNullOrEmpty(_outputFolder) || !_outputFolder.StartsWith("Builds/"))
-            _outputFolder = DefaultOutputFolder();
-    }
+    private void OnValidate() => _outputFolder = DefaultOutputFolder();
 }
 public enum StoreType
 {

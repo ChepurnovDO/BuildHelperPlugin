@@ -34,7 +34,9 @@ public class AndroidBuildWindow : EditorWindow
         _selectedConfigIndex = EditorGUILayout.Popup("Selected Config", _selectedConfigIndex, _configPaths.Select(Path.GetFileNameWithoutExtension).ToArray());
         _config = AssetDatabase.LoadAssetAtPath<BuildConfig>(_configPaths[_selectedConfigIndex]);
 
-        if (_config == null) 
+        UpdatePlayerSettings();
+
+        if (_config == null)
             return;
 
         EditorGUILayout.Space();
@@ -58,13 +60,7 @@ public class AndroidBuildWindow : EditorWindow
 
     private void Build()
     {
-        PlayerSettings.bundleVersion = _config.Version;
-        PlayerSettings.Android.useCustomKeystore = true;
-        PlayerSettings.applicationIdentifier = _config.PackageName;
-        PlayerSettings.Android.keyaliasPass = _config.AliasPassword;
-        PlayerSettings.Android.keystorePass = _config.KeystorePassword;
-        PlayerSettings.Android.bundleVersionCode = _config.BundleVersionCode;
-        PlayerSettings.Android.useAPKExpansionFiles = _config.SplitApplicationBinary;
+        UpdatePlayerSettings();
 
         BuildOptions options = BuildOptions.None;
         string extension = _config.PackageType == PackageType.APK ? "apk" : "aab";
@@ -103,7 +99,7 @@ public class AndroidBuildWindow : EditorWindow
         if (buildReport.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
         {
             Debug.Log($"Build completed: {outputPath}");
-            
+
             try
             {
                 string folderPath = Path.GetFullPath(_config.OutputFolder);
@@ -118,5 +114,16 @@ public class AndroidBuildWindow : EditorWindow
         {
             Debug.LogError($"Build failed: {buildReport.summary.result}");
         }
+    }
+
+    private void UpdatePlayerSettings()
+    {
+        PlayerSettings.bundleVersion = _config.Version;
+        PlayerSettings.Android.useCustomKeystore = true;
+        PlayerSettings.applicationIdentifier = _config.PackageName;
+        PlayerSettings.Android.keyaliasPass = _config.AliasPassword;
+        PlayerSettings.Android.keystorePass = _config.KeystorePassword;
+        PlayerSettings.Android.bundleVersionCode = _config.BundleVersionCode;
+        PlayerSettings.Android.useAPKExpansionFiles = _config.SplitApplicationBinary;
     }
 }
