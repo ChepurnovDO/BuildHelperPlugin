@@ -11,7 +11,7 @@ Installation
 
 Usage
 
-    Create a Build Config via Assets/Create/Build Config/Build Config.
+    Create the required number of build configurations via Build Helper Plugin/Create Build Configs.
     Fill in the configuration (Store Type, Package Type, Package Name, etc.).
-    Open the tool via Tools/Build Helper Plugin.
+    Open the tool via Build Helper Plugin/Open Build Window.
     Select the config and click "Build".
